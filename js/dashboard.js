@@ -11,21 +11,25 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const cargo = {
                 direction: document.getElementById('cargo-direction').value,
-                weight: document.getElementById('cargo-weight').value,
-                volume: document.getElementById('cargo-volume').value,
-                price: document.getElementById('cargo-price').value,
+                weight: parseFloat(document.getElementById('cargo-weight').value),
+                volume: parseFloat(document.getElementById('cargo-volume').value),
+                price: parseFloat(document.getElementById('cargo-price').value),
                 phone: document.getElementById('cargo-phone').value,
                 type: document.getElementById('cargo-type').value
             };
-            fetch('http://localhost:5000/add-cargo', {
+            fetch('https://yuktashish.onrender.com/add-cargo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cargo)
-            }).then(res => res.json()).then(data => {
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
                 alert(data.message);
                 loadCompanyCargos();
                 e.target.reset();
-            });
+            })
+            .catch(err => alert('Xatolik: ' + err.message));
         });
     } else if (user?.role === 'driver') {
         driverDashboard.style.display = 'block';
@@ -34,12 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadCompanyCargos() {
-    fetch('http://localhost:5000/cargos')
+    fetch('https://yuktashish.onrender.com/cargos')
         .then(res => res.json())
         .then(cargos => {
             const cargoList = document.getElementById('company-cargo-list');
             cargoList.innerHTML = '<h3>Aktiv yuklar</h3>';
-            cargos.forEach((cargo, index) => {
+            cargos.forEach((cargo) => {
                 const card = document.createElement('div');
                 card.classList.add('cargo-card');
                 card.innerHTML = `
@@ -49,23 +53,20 @@ function loadCompanyCargos() {
                         <p><i class="fa-solid fa-box"></i> ${cargo.volume} m³</p>
                         <p><i class="fa-solid fa-truck"></i> Yukxona turi: ${cargo.type}</p>
                     </div>
-                    <div>
-                        <button onclick="editCargo(${cargo.id})"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button onclick="deleteCargo(${cargo.id})"><i class="fa-solid fa-trash"></i></button>
-                    </div>
                 `;
                 cargoList.appendChild(card);
             });
-        });
+        })
+        .catch(err => alert('Yuklarni yuklashda xatolik: ' + err.message));
 }
 
 function loadDriverCargos() {
-    fetch('http://localhost:5000/cargos')
+    fetch('https://yuktashish.onrender.com/cargos')
         .then(res => res.json())
         .then(cargos => {
             const cargoList = document.getElementById('driver-cargo-list');
             cargoList.innerHTML = '';
-            cargos.forEach((cargo, index) => {
+            cargos.forEach((cargo) => {
                 const card = document.createElement('div');
                 card.classList.add('cargo-card');
                 card.innerHTML = `
@@ -79,7 +80,12 @@ function loadDriverCargos() {
                 `;
                 cargoList.appendChild(card);
             });
-        });
+        })
+        .catch(err => alert('Yuklarni yuklashda xatolik: ' + err.message));
+}
+
+function requestCargo(cargoId) {
+    alert(`Yuk #${cargoId} qabul qilindi (keyinchalik bu funksiya kengaytiriladi)`);
 }
 
 function updateNav() {
