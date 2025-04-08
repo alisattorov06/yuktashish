@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YukTashish.uz - Bosh sahifa</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <h1>YukTashish.uz</h1>
+            <ul>
+                <li><a href="index.html">Bosh sahifa</a></li>
+                <li><a href="dashboard.html">Shaxsiy kabinet</a></li>
+                <li><a href="register.html">Ro'yxatdan o'tish</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="search-filter">
+            <h2>Yuk qidirish</h2>
+            <div class="filters">
+                <select id="cargo-type">
+                    <option value="">Yukxona turi</option>
+                    <option value="tent">Tent</option>
+                    <option value="ref">Refrijerator</option>
+                    <option value="gazel">Gazel</option>
+                </select>
+                <select id="region">
+                    <option value="">Viloyat</option>
+                    <option value="Toshkent-Chilonzor">Toshkent – Chilonzor</option>
+                    <option value="Namangan-Kosonsoy">Namangan – Kosonsoy</option>
+                </select>
+                <input type="number" id="weight" placeholder="Og'irlik (kg)">
+            </div>
+        </section>
+
+        <section class="cargo-list" id="cargo-list">
+            <!-- Yuklar JS orqali qo'shiladi -->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 YukTashish.uz</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

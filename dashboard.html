@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shaxsiy kabinet - YukTashish.uz</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <h1>YukTashish.uz</h1>
+            <ul>
+                <li><a href="index.html">Bosh sahifa</a></li>
+                <li><a href="register.html">Ro'yxatdan o'tish</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="dashboard">
+            <h2>Shaxsiy kabinet</h2>
+            <div id="company-dashboard" style="display: none;">
+                <form id="add-cargo-form">
+                    <h3><i class="fa-solid fa-plus"></i> Yangi yuk joylash</h3>
+                    <input type="text" id="cargo-direction" placeholder="Yo'nalish (Masalan: Toshkent → Namangan)" required>
+                    <input type="number" id="cargo-weight" placeholder="Og'irlik (kg)" required>
+                    <input type="number" id="cargo-volume" placeholder="Hajm (m³)" required>
+                    <input type="number" id="cargo-price" placeholder="Narx (so'm)" required>
+                    <input type="tel" id="cargo-phone" placeholder="Telefon" required>
+                    <button type="submit">Yuk qo'shish</button>
+                </form>
+                <div id="company-cargo-list"></div>
+                <div id="request-list"></div>
+                <div id="history-list"></div>
+            </div>
+
+            <div id="driver-dashboard" style="display: none;">
+                <h3>Mos yuklar</h3>
+                <div id="driver-cargo-list"></div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
