@@ -14,32 +14,58 @@
             <h1>YukTashish.uz</h1>
             <ul>
                 <li><a href="index.html">Bosh sahifa</a></li>
-                <li><a href="register.html">Ro'yxatdan o'tish</a></li>
+                <li id="register-link"><a href="register.html">Ro'yxatdan o'tish</a></li>
+                <li id="logout-link" style="display:none;"><a href="#" onclick="logout()">Chiqish</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
         <section class="dashboard">
-            <h2>Shaxsiy kabinet</h2>
+            <div id="user-info">
+                <h2 id="welcome-message">Shaxsiy kabinet</h2>
+                <p id="user-email"></p>
+            </div>
+            
             <div id="company-dashboard" style="display: none;">
                 <form id="add-cargo-form">
                     <h3><i class="fa-solid fa-plus"></i> Yangi yuk joylash</h3>
                     <input type="text" id="cargo-direction" placeholder="Yo'nalish (Masalan: Toshkent → Namangan)" required>
                     <input type="number" id="cargo-weight" placeholder="Og'irlik (kg)" required>
-                    <input type="number" id="cargo-volume" placeholder="Hajm (m³)" required>
+                    <input type="number" step="0.01" id="cargo-volume" placeholder="Hajm (m³)" required>
                     <input type="number" id="cargo-price" placeholder="Narx (so'm)" required>
                     <input type="tel" id="cargo-phone" placeholder="Telefon" required>
+                    <select id="cargo-type" required>
+                        <option value="">Yuk turini tanlang</option>
+                        <option value="tent">Tent</option>
+                        <option value="gazel">Gazel</option>
+                        <option value="fura">Fura</option>
+                        <option value="konteyner">Konteyner</option>
+                    </select>
                     <button type="submit">Yuk qo'shish</button>
                 </form>
-                <div id="company-cargo-list"></div>
-                <div id="request-list"></div>
-                <div id="history-list"></div>
+                
+                <div class="dashboard-section">
+                    <h3><i class="fa-solid fa-truck-loading"></i> Mening yuklarim</h3>
+                    <div id="company-cargo-list" class="cargo-list"></div>
+                </div>
+                
+                <div class="dashboard-section">
+                    <h3><i class="fa-solid fa-handshake"></i> Yuk takliflari</h3>
+                    <div id="request-list" class="request-list"></div>
+                </div>
             </div>
 
             <div id="driver-dashboard" style="display: none;">
-                <h3>Mos yuklar</h3>
-                <div id="driver-cargo-list"></div>
+                <div class="dashboard-section">
+                    <h3><i class="fa-solid fa-boxes"></i> Mos keladigan yuklar</h3>
+                    <div id="driver-cargo-list" class="cargo-list"></div>
+                </div>
+                
+                <div class="dashboard-section">
+                    <h3><i class="fa-solid fa-history"></i> Yakunlangan yuklar</h3>
+                    <div id="history-list" class="history-list"></div>
+                </div>
             </div>
         </section>
     </main>
