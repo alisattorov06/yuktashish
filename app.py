@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 import sqlite3
+import os
 
 app = Flask(__name__)
 
-# Ma'lumotlar bazasini yaratish va jadval tuzish
 def init_db():
     conn = sqlite3.connect('yuktashish.db')
     c = conn.cursor()
@@ -14,7 +14,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Ro'yxatdan o'tish API
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -25,7 +24,6 @@ def register():
     conn.close()
     return jsonify({"message": "Foydalanuvchi ro'yxatdan o'tdi"}), 201
 
-# Yuk qo'shish API
 @app.route('/add-cargo', methods=['POST'])
 def add_cargo():
     data = request.get_json()
@@ -37,7 +35,6 @@ def add_cargo():
     conn.close()
     return jsonify({"message": "Yuk qo'shildi"}), 201
 
-# Yuklarni olish API (dashboard uchun)
 @app.route('/cargos', methods=['GET'])
 def get_cargos():
     conn = sqlite3.connect('yuktashish.db')
@@ -48,5 +45,6 @@ def get_cargos():
     return jsonify(cargos), 200
 
 if __name__ == '__main__':
-    init_db()  # Ma'lumotlar bazasini ishga tushirish
-    app.run(debug=True, port=5000)
+    init_db()
+    port = int(os.environ.get("PORT", 10000))  # Render PORTni oladi, aks holda 10000
+    app.run(host='0.0.0.0', port=port, debug=True)  # 0.0.0.0 ga bog‘lash
