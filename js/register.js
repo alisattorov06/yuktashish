@@ -36,15 +36,19 @@ document.getElementById('company-form').addEventListener('submit', (e) => {
         name: document.getElementById('company-name').value,
         role: 'company'
     };
-    fetch('http://localhost:5000/register', {
+    fetch('https://yuktashish.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(company)
-    }).then(res => res.json()).then(data => {
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) throw new Error(data.error);
         alert(data.message);
         localStorage.setItem('user', JSON.stringify(company));
         window.location.href = 'dashboard.html';
-    });
+    })
+    .catch(err => alert('Xatolik: ' + err.message));
 });
 
 document.getElementById('driver-form').addEventListener('submit', (e) => {
@@ -53,15 +57,19 @@ document.getElementById('driver-form').addEventListener('submit', (e) => {
         name: document.getElementById('driver-name').value,
         role: 'driver'
     };
-    fetch('http://localhost:5000/register', {
+    fetch('https://yuktashish.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(driver)
-    }).then(res => res.json()).then(data => {
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) throw new Error(data.error);
         alert(data.message);
         localStorage.setItem('user', JSON.stringify(driver));
         window.location.href = 'dashboard.html';
-    });
+    })
+    .catch(err => alert('Xatolik: ' + err.message));
 });
 
 function updateNav() {
