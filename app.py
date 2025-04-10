@@ -10,7 +10,7 @@ DB_PATH = os.path.join(BASE_DIR, 'yuktashish.db')
 
 # Flask ilovasini yaratish
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-123456789')
+app.secret_key = os.environ.get('ali_sattorov', 'yuk_tashish')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = True
 
