@@ -1,25 +1,36 @@
-from flask import Flask, request, jsonify, session
-from flask_cors import CORS
 import sqlite3
 import os
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
 
-# Flask ilovasini yaratamiz
+# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'maxfiy-kalit-12345')
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-123456789')
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True
 
-# CORS sozlamalari
-CORS(app, supports_credentials=True)
+# Configure CORS
+CORS(app, 
+     supports_credentials=True,
+     resources={
+         r"/*": {
+             "origins": ["*"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"]
+         }
+     }
+)
 
-# Ma'lumotlar bazasini yaratish
+# Database initialization
 def init_db():
+    conn = None
     try:
         conn = sqlite3.connect('yuktashish.db')
-        cursor = conn.cursor()
+        c = conn.cursor()
         
-        # Foydalanuvchilar jadvali
-        cursor.execute('''
+        # Create users table
+        c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -27,14 +38,14 @@ def init_db():
             password TEXT NOT NULL,
             role TEXT NOT NULL,
             phone TEXT,
-            company TEXT,
+            company_name TEXT,
             vehicle_type TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         ''')
         
-        # Yuklar jadvali
-        cursor.execute('''
+        # Create cargos table
+        c.execute('''
         CREATE TABLE IF NOT EXISTS cargos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -51,89 +62,101 @@ def init_db():
         ''')
         
         conn.commit()
-    except Exception as e:
-        print(f"Xato: {e}")
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
     finally:
         if conn:
             conn.close()
 
-# Ro'yxatdan o'tish
+# User registration endpoint
 @app.route('/register', methods=['POST'])
 def register():
     try:
         data = request.get_json()
         
-        # Majburiy maydonlarni tekshirish
+        # Validate required fields
         required_fields = ['name', 'email', 'password', 'role']
         if not all(field in data for field in required_fields):
-            return jsonify({"xato": "Barcha maydonlarni to'ldiring"}), 400
-            
-        # Parolni hash qilish
-        hashed_password = generate_password_hash(data['password'])
+            return jsonify({"error": "Barcha maydonlarni to'ldiring"}), 400
+        
+        # Validate password length
+        if len(data['password']) < 6:
+            return jsonify({"error": "Parol kamida 6 belgidan iborat bo'lishi kerak"}), 400
         
         conn = sqlite3.connect('yuktashish.db')
-        cursor = conn.cursor()
+        c = conn.cursor()
         
-        # Foydalanuvchini bazaga qo'shish
-        cursor.execute('''
-        INSERT INTO users (name, email, password, role, phone, company, vehicle_type)
+        # Check if email exists
+        c.execute("SELECT id FROM users WHERE email = ?", (data['email'],))
+        if c.fetchone():
+            conn.close()
+            return jsonify({"error": "Bu email allaqachon ro'yxatdan o'tgan"}), 400
+        
+        # Hash password
+        hashed_pw = generate_password_hash(data['password'])
+        
+        # Insert new user
+        c.execute('''
+        INSERT INTO users (name, email, password, role, phone, company_name, vehicle_type)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             data['name'],
             data['email'],
-            hashed_password,
+            hashed_pw,
             data['role'],
             data.get('phone', ''),
-            data.get('company', ''),
+            data.get('company_name', ''),
             data.get('vehicle_type', '')
         ))
         
         conn.commit()
-        user_id = cursor.lastrowid
+        user_id = c.lastrowid
         conn.close()
         
         return jsonify({
-            "xabar": "Ro'yxatdan o'tish muvaffaqiyatli",
+            "success": True,
+            "message": "Ro'yxatdan o'tish muvaffaqiyatli",
             "user_id": user_id
         }), 201
         
-    except sqlite3.IntegrityError:
-        return jsonify({"xato": "Bu email allaqachon ro'yxatdan o'tgan"}), 400
     except Exception as e:
-        return jsonify({"xato": str(e)}), 500
+        print(f"Registration error: {e}")
+        return jsonify({"error": "Server xatosi"}), 500
 
-# Tizimga kirish
+# User login endpoint
 @app.route('/login', methods=['POST'])
 def login():
     try:
         data = request.get_json()
         
         if not data or 'email' not in data or 'password' not in data:
-            return jsonify({"xato": "Email va parol kiritishingiz kerak"}), 400
+            return jsonify({"error": "Email va parol kiritishingiz kerak"}), 400
         
         conn = sqlite3.connect('yuktashish.db')
-        cursor = conn.cursor()
+        c = conn.cursor()
         
-        # Foydalanuvchini qidirish
-        cursor.execute('SELECT id, name, email, password, role FROM users WHERE email = ?', (data['email'],))
-        user = cursor.fetchone()
+        c.execute('''
+        SELECT id, name, email, password, role FROM users WHERE email = ?
+        ''', (data['email'],))
+        
+        user = c.fetchone()
         conn.close()
         
         if not user:
-            return jsonify({"xato": "Foydalanuvchi topilmadi"}), 404
+            return jsonify({"error": "Foydalanuvchi topilmadi"}), 404
         
-        # Parolni tekshirish
         if not check_password_hash(user[3], data['password']):
-            return jsonify({"xato": "Noto'g'ri parol"}), 401
+            return jsonify({"error": "Noto'g'ri parol"}), 401
         
-        # Sessiyaga saqlash
+        # Set session
         session['user_id'] = user[0]
         session['user_email'] = user[2]
         session['user_role'] = user[4]
         
         return jsonify({
-            "xabar": "Kirish muvaffaqiyatli",
-            "foydalanuvchi": {
+            "success": True,
+            "message": "Kirish muvaffaqiyatli",
+            "user": {
                 "id": user[0],
                 "name": user[1],
                 "email": user[2],
@@ -142,24 +165,29 @@ def login():
         }), 200
         
     except Exception as e:
-        return jsonify({"xato": str(e)}), 500
+        print(f"Login error: {e}")
+        return jsonify({"error": "Server xatosi"}), 500
 
-# Foydalanuvchi ma'lumotlari
+# User profile endpoint
 @app.route('/profile', methods=['GET'])
 def profile():
     if 'user_id' not in session:
-        return jsonify({"xato": "Kirish talab qilinadi"}), 401
+        return jsonify({"error": "Kirish talab qilinadi"}), 401
     
     try:
         conn = sqlite3.connect('yuktashish.db')
-        cursor = conn.cursor()
+        c = conn.cursor()
         
-        cursor.execute('SELECT id, name, email, role, phone, company, vehicle_type FROM users WHERE id = ?', (session['user_id'],))
-        user = cursor.fetchone()
+        c.execute('''
+        SELECT id, name, email, role, phone, company_name, vehicle_type 
+        FROM users WHERE id = ?
+        ''', (session['user_id'],))
+        
+        user = c.fetchone()
         conn.close()
         
         if not user:
-            return jsonify({"xato": "Foydalanuvchi topilmadi"}), 404
+            return jsonify({"error": "Foydalanuvchi topilmadi"}), 404
         
         return jsonify({
             "id": user[0],
@@ -167,62 +195,22 @@ def profile():
             "email": user[2],
             "role": user[3],
             "phone": user[4],
-            "company": user[5],
+            "company_name": user[5],
             "vehicle_type": user[6]
         }), 200
         
     except Exception as e:
-        return jsonify({"xato": str(e)}), 500
+        print(f"Profile error: {e}")
+        return jsonify({"error": "Server xatosi"}), 500
 
-# Yuk qo'shish
-@app.route('/add-cargo', methods=['POST'])
-def add_cargo():
-    if 'user_id' not in session:
-        return jsonify({"xato": "Kirish talab qilinadi"}), 401
-    
-    try:
-        data = request.get_json()
-        required_fields = ['direction', 'weight', 'volume', 'price', 'phone', 'type']
-        
-        if not data or not all(field in data for field in required_fields):
-            return jsonify({"xato": "Barcha maydonlarni to'ldiring"}), 400
-        
-        conn = sqlite3.connect('yuktashish.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-        INSERT INTO cargos (user_id, direction, weight, volume, price, phone, type)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            session['user_id'],
-            data['direction'],
-            data['weight'],
-            data['volume'],
-            data['price'],
-            data['phone'],
-            data['type']
-        ))
-        
-        conn.commit()
-        cargo_id = cursor.lastrowid
-        conn.close()
-        
-        return jsonify({
-            "xabar": "Yuk muvaffaqiyatli qo'shildi",
-            "cargo_id": cargo_id
-        }), 201
-        
-    except Exception as e:
-        return jsonify({"xato": str(e)}), 500
-
-# Tizimdan chiqish
+# Logout endpoint
 @app.route('/logout', methods=['POST'])
 def logout():
     session.clear()
-    return jsonify({"xabar": "Chiqish muvaffaqiyatli"}), 200
+    return jsonify({"success": True, "message": "Chiqish muvaffaqiyatli"}), 200
 
-# Dasturni ishga tushirish
+# Initialize database and run app
 if __name__ == '__main__':
     init_db()
     port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port)
